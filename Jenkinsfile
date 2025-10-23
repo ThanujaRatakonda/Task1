@@ -41,18 +41,15 @@ pipeline {
 
         stage('Upload to Artifactory') {
             steps {
-                script {
-                    def server = Artifactory.server('JFROG') // Replace with your actual Server ID
-
-                    def uploadSpec = """{
+                rtUpload (
+                    serverId: 'JFROG', // ✅ Make sure this matches your configured Server ID
+                    spec: """{
                         "files": [{
                             "pattern": "dist/*.jar",
                             "target": "${ARTIFACTORY_REPO}/Task1/"
                         }]
                     }"""
-
-                    server.upload(uploadSpec)
-                }
+                )
             }
         }
     }
