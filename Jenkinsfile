@@ -7,7 +7,6 @@ pipeline {
     }
 
     environment {
-        ARTIFACTORY_URL = 'http://10.131.103.92:8081/artifactory'
         ARTIFACTORY_REPO = 'libs-release-local'
     }
 
@@ -42,23 +41,17 @@ pipeline {
 
         stage('Upload to Artifactory') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'JFROG', usernameVariable: 'ARTIFACTORY_USER', passwordVariable: 'ARTIFACTORY_PASS')]) {
-                    script {
-                        def server = Artifactory.newServer(
-                            url: "${ARTIFACTORY_URL}",
-                            username: ARTIFACTORY_USER,
-                            password: ARTIFACTORY_PASS
-                        )
+                script {
+                    def server = Artifactory.server('JFROG_SERVER') // Replace with your actual Server ID
 
-                        def uploadSpec = """{
-                            "files": [{
-                                "pattern": "dist/*.jar",
-                                "target": "${ARTIFACTORY_REPO}/Task1/"
-                            }]
-                        }"""
+                    def uploadSpec = """{
+                        "files": [{
+                            "pattern": "dist/*.jar",
+                            "target": "${ARTIFACTORY_REPO}/Task1/"
+                        }]
+                    }"""
 
-                        server.upload(uploadSpec)
-                    }
+                    server.upload(uploadSpec)
                 }
             }
         }
