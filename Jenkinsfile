@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        ARTIFACTORY_URL = 'http://10.131.103.92:5040/artifactory' // Corrected port to match your setup
+        ARTIFACTORY_URL = 'http://10.131.103.92:8081/artifactory' // Corrected port to match your setup
         ARTIFACTORY_REPO = 'libs-release-local'
     }
 
@@ -17,9 +17,9 @@ pipeline {
                 checkout([$class: 'GitSCM',
                     userRemoteConfigs: [[
                         url: 'https://github.com/ThanujaRatakonda/Task1.git',
-                        credentialsId: 'GitHub Personal Access Token' // ✅ Use exact credential ID
+                        credentialsId: 'GitHub' // ✅ Use exact credential ID
                     ]],
-                    branches: [[name: '*/main']]
+                    branches: [[name: '*/master']]
                 ])
             }
         }
