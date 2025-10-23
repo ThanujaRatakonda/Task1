@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        ARTIFACTORY_URL = 'http://10.131.103.92:8081/artifactory' // Corrected port to match your setup
+        ARTIFACTORY_URL = 'http://10.131.103.92:8081/artifactory' // ✅ Corrected Artifactory port
         ARTIFACTORY_REPO = 'libs-release-local'
     }
 
@@ -17,23 +17,25 @@ pipeline {
                 checkout([$class: 'GitSCM',
                     userRemoteConfigs: [[
                         url: 'https://github.com/ThanujaRatakonda/Task1.git',
-                        credentialsId: 'GitHub' // ✅ Use exact credential ID
+                        credentialsId: 'GITHUB' // ✅ Ensure this matches your Jenkins credential ID
                     ]],
-                    branches: [[name: '*/master']]
+                    branches: [[name: '*/master']] // ✅ Adjust if your repo uses 'main'
                 ])
             }
         }
 
         stage('Build') {
             steps {
-                sh 'ant clean dist' // ✅ Matches your build.xml default target
+                sh 'ant clean dist'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh "sonar-scanner -Dsonar.projectKey=Task1 -Dsonar.sources=. -Dsonar.login=${SONAR_TOKEN}"
+                withCredentials([string(credentialsId: 'SonarQube', variable: 'SONAR_TOKEN')]) {
+                    withSonarQubeEnv('SonarQube') {
+                        sh "sonar-scanner -Dsonar.projectKey=Task1 -Dsonar.sources=. -Dsonar.host.url=http://10.131.103.92:9000 -Dsonar.login=${SONAR_TOKEN}"
+                    }
                 }
             }
         }
@@ -41,7 +43,7 @@ pipeline {
         stage('Upload to Artifactory') {
             steps {
                 script {
-                    def server = Artifactory.server('JFROG') // ✅ Use configured server ID
+                    def server = Artifactory.server('JFROG') // ✅ Server ID configured in Jenkins
                     def uploadSpec = """{
                         "files": [{
                             "pattern": "dist/*.jar",
