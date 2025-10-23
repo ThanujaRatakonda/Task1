@@ -19,7 +19,7 @@ pipeline {
                         url: 'https://github.com/ThanujaRatakonda/Task1.git',
                         credentialsId: 'GITHUB'
                     ]],
-                    branches: [[name: '*/main']]
+                    branches: [[name: '*/master']]
                 ])
             }
         }
