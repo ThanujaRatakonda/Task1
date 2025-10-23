@@ -17,7 +17,7 @@
                 checkout([$class: 'GitSCM',
                     userRemoteConfigs: [[
                         url: 'https://github.com/ThanujaRatakonda/Task1.git',
-                        credentialsId: 'GITHUB'
+                        credentialsId: 'GitHub'
                     ]],
                     branches: [[name: '*/master']]
                 ])
