@@ -42,7 +42,7 @@ pipeline {
         stage('Upload to Artifactory') {
             steps {
                 script {
-                    def server = Artifactory.server('JFROG_SERVER') // Replace with your actual Server ID
+                    def server = Artifactory.server('JFROG') // Replace with your actual Server ID
 
                     def uploadSpec = """{
                         "files": [{
