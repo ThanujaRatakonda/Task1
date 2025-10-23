@@ -1,32 +1,39 @@
 pipeline {
     agent any
 
+    tools {
+        jdk 'Java'
+        ant 'ant'
+    }
+
     environment {
-        GITHUB_TOKEN = credentials('GITHUB')
-        SONAR_TOKEN = credentials('SonarQube')
-        ARTIFACTORY_CREDS = credentials('JFROG')
+        ARTIFACTORY_URL = 'http://10.131.103.92:5040/artifactory' // Corrected port to match your setup
+        ARTIFACTORY_REPO = 'libs-release-local'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/ThanujaRatakonda/Task1.git', credentialsId: 'GITHUB'
+                checkout([$class: 'GitSCM',
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/ThanujaRatakonda/Task1.git',
+                        credentialsId: 'GitHub Personal Access Token' // ✅ Use exact credential ID
+                    ]],
+                    branches: [[name: '*/main']]
+                ])
             }
         }
 
-        stage('Build with Ant') {
+        stage('Build') {
             steps {
-                sh 'ant clean build'
+                sh 'ant clean dist' // ✅ Matches your build.xml default target
             }
         }
 
         stage('SonarQube Analysis') {
-            environment {
-                SONAR_HOST_URL = 'http://10.131.103.92:9000'
-            }
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh "sonar-scanner -Dsonar.projectKey=Task1 -Dsonar.sources=. -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}"
+                    sh "sonar-scanner -Dsonar.projectKey=Task1 -Dsonar.sources=. -Dsonar.login=${SONAR_TOKEN}"
                 }
             }
         }
@@ -34,19 +41,13 @@ pipeline {
         stage('Upload to Artifactory') {
             steps {
                 script {
-                    def server = Artifactory.newServer(
-                        url: 'http://10.131.103.92:8081/artifactory',
-                        username: ARTIFACTORY_CREDS_USR,
-                        password: ARTIFACTORY_CREDS_PSW
-                    )
-
+                    def server = Artifactory.server('JFROG') // ✅ Use configured server ID
                     def uploadSpec = """{
-                      "files": [{
-                        "pattern": "target/*.jar",
-                        "target": "libs-release-local/Task1/"
-                      }]
+                        "files": [{
+                            "pattern": "dist/*.jar",
+                            "target": "${ARTIFACTORY_REPO}/Task1/"
+                        }]
                     }"""
-
                     server.upload(uploadSpec)
                 }
             }
