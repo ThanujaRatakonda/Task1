@@ -42,8 +42,6 @@ pipeline {
                 }
             }
         }           
-        }
-
         stage('Upload to Artifactory') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'JFROG', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
