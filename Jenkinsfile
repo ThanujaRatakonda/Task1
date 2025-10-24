@@ -12,6 +12,12 @@ pipeline {
     }
 
     stages {
+        stage('Cleanup') {
+            steps {
+                deleteDir()
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout([$class: 'GitSCM',
@@ -31,24 +37,33 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
+            options {
+                timeout(time: 5, unit: 'MINUTES')
+            }
             steps {
                 withCredentials([string(credentialsId: 'SonarQube', variable: 'SONAR_TOKEN')]) {
                     withSonarQubeEnv('SonarQube') {
-                        sh 'sonar-scanner -Dsonar.projectKey=Task1 -Dsonar.sources=. -Dsonar.token=$SONAR_TOKEN -Dsonar.host.url=http://10.131.103.92:9000'
+                        sh '''
+                            sonar-scanner \
+                            -Dsonar.projectKey=Task1 \
+                            -Dsonar.sources=. \
+                            -Dsonar.token=$SONAR_TOKEN \
+                            -Dsonar.host.url=http://10.131.103.92:9000
+                        '''
                     }
                 }
             }
         }
 
         stage('Upload to Artifactory') {
-    steps {
-        withCredentials([usernamePassword(credentialsId: 'JFROG', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-            sh '''
-                FILE_NAME=$(basename dist/*.jar)
-                curl -u $USERNAME:$PASSWORD -T dist/$FILE_NAME "$ARTIFACTORY_URL/$ARTIFACTORY_REPO/Task1/$FILE_NAME"
-            '''
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'JFROG', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh '''
+                        FILE_NAME=$(basename dist/*.jar)
+                        curl -u $USERNAME:$PASSWORD -T dist/$FILE_NAME "$ARTIFACTORY_URL/$ARTIFACTORY_REPO/Task1/$FILE_NAME"
+                    '''
+                }
+            }
         }
-    }
-}
     }
 }
