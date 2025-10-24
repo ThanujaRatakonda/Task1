@@ -32,8 +32,10 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner'
+                withCredentials([string(credentialsId: 'SonarQube', variable: 'SONAR_TOKEN')]) {
+                    withSonarQubeEnv('SonarQube') {
+                        sh 'sonar-scanner -Dsonar.projectKey=Task1 -Dsonar.sources=. -Dsonar.token=$SONAR_TOKEN -Dsonar.host.url=http://10.131.103.92:9000'
+                    }
                 }
             }
         }
@@ -42,11 +44,10 @@ pipeline {
             steps {
                 script {
                     def server = Artifactory.server('JFROG')
-                    server.credentialsId = 'JFROG'
                     def uploadSpec = """{
                         "files": [{
                             "pattern": "dist/*.jar",
-                            "target": "${ARTIFACTORY_REPO}/"
+                            "target": "${ARTIFACTORY_REPO}/Task1/"
                         }]
                     }"""
                     server.upload(uploadSpec)
@@ -55,5 +56,3 @@ pipeline {
         }
     }
 }
-
-
