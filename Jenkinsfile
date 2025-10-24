@@ -7,6 +7,7 @@ pipeline {
     }
 
     environment {
+        ARTIFACTORY_URL = 'http://10.131.103.92:8081/artifactory'
         ARTIFACTORY_REPO = 'libs-release-local'
     }
 
@@ -31,26 +32,28 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withCredentials([string(credentialsId: 'SonarQube', variable: 'SONAR_TOKEN')]) {
-                    withSonarQubeEnv('SonarQube') {
-                        sh 'sonar-scanner -Dsonar.projectKey=Task1 -Dsonar.sources=. -Dsonar.token=${SONAR_TOKEN} -Dsonar.host.url=http://10.131.103.92:9000'
-                    }
+                withSonarQubeEnv('SonarQube') {
+                    sh 'sonar-scanner'
                 }
             }
         }
 
         stage('Upload to Artifactory') {
             steps {
-                rtUpload (
-                    serverId: 'JFROG', // ✅ Make sure this matches your configured Server ID
-                    spec: """{
+                script {
+                    def server = Artifactory.server('JFROG')
+                    server.credentialsId = 'JFROG'
+                    def uploadSpec = """{
                         "files": [{
                             "pattern": "dist/*.jar",
-                            "target": "${ARTIFACTORY_REPO}/Task1/"
+                            "target": "${ARTIFACTORY_REPO}/"
                         }]
                     }"""
-                )
+                    server.upload(uploadSpec)
+                }
             }
         }
     }
 }
+
+
