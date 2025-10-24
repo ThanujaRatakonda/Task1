@@ -41,18 +41,14 @@ pipeline {
         }
 
         stage('Upload to Artifactory') {
-            steps {
-                script {
-                    def server = Artifactory.server('JFROG')
-                    def uploadSpec = """{
-                        "files": [{
-                            "pattern": "dist/*.jar",
-                            "target": "${ARTIFACTORY_REPO}/Task1/"
-                        }]
-                    }"""
-                    server.upload(uploadSpec)
-                }
-            }
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'JFROG', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+            sh '''
+                FILE_NAME=$(basename dist/*.jar)
+                curl -u $USERNAME:$PASSWORD -T dist/$FILE_NAME "$ARTIFACTORY_URL/$ARTIFACTORY_REPO/Task1/$FILE_NAME"
+            '''
         }
+    }
+}
     }
 }
